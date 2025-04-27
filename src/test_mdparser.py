@@ -92,17 +92,14 @@ class MDParserTest(unittest.TestCase):
             TextNode("_I am the root of **all** evil_. _I_. **AM**. _**PYTHON**_.")
         ]
         output = [
-            TextNode("I am the root of ", TextType.ITALIC),
-            TextNode("all", TextType.BOLD),
-            TextNode(" evil", TextType.ITALIC),
+            # multi-delims are not supported
+            TextNode("I am the root of **all** evil", TextType.ITALIC),
             TextNode(". ", TextType.TEXT),
             TextNode("I", TextType.ITALIC),
             TextNode(". ", TextType.TEXT),
             TextNode("AM", TextType.BOLD),
             TextNode(". ", TextType.TEXT),
-            TextNode(
-                "PYTHON", TextType.BOLD
-            ),  # oopsies multi-delims not fully supported :)
+            TextNode("**PYTHON**", TextType.ITALIC),
             TextNode(".", TextType.TEXT),
         ]
         self.assertListEqual(

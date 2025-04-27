@@ -1,12 +1,11 @@
 from textnode import TextNode, TextType
 
+
 # takes nodes, inspects their text, and if there is text surrounded by the delimiter turns it into a new set of nodes.
 # chain 'em together to handle all the things
 # i.e
 # split_nodes_delimiter([TextNode(None, "I am **bold** and **cool**")], "**", TextType.BOLD)
 # returns [TextNode(TextType.TEXT, "I am "), TextNode(TextType.BOLD, "bold"), TextNode(TextType.TEXT, " and "), TextNode(TextType.BOLD, "cool")]
-
-
 def split_nodes_delimiter(
     nodes: list[TextNode], delimiter: str, node_type: TextType
 ) -> list[TextNode]:
@@ -16,7 +15,7 @@ def split_nodes_delimiter(
     for n in nodes:
         start_from = 0  # where in node text where begin to substr from
         i = 0
-        if len(n.text) < len(delimiter):
+        if len(n.text) < len(delimiter) or n.type is not TextType.TEXT:
             new_nodes.append(n)
             continue
         while i <= len(n.text) - len(delimiter):

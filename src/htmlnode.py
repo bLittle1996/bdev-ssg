@@ -31,11 +31,22 @@ class HTMLNode:
     def _escape_special_chars(self, text: str) -> str:
         return text.replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
 
-    def __eq__(self, value: object, /) -> bool:
-        if not isinstance(value, type(self)):
+    def __eq__(self, rhs: object, /) -> bool:
+        if not isinstance(rhs, type(self)):
             return False
 
-        return self.to_html() == value.to_html()
+        tag_eq = self.tag == rhs.tag
+        value_eq = self.value == rhs.value
+        children_eq = len(self.children) == len(rhs.children)
+        prop_eq = len(self.props) == len(rhs.props)
+        if children_eq:
+            for i, node in enumerate(self.children):
+                children_eq = children_eq and node == rhs.children[i]
+        if prop_eq:
+            for k, v in self.props.items():
+                prop_eq = prop_eq and k in rhs.props and v == rhs.props[k]
+
+        return tag_eq and value_eq and children_eq and prop_eq
 
     def __repr__(self) -> str:
         props = ""

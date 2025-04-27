@@ -18,6 +18,48 @@ class HTMLNodeTest(unittest.TestCase):
         for node, expected in cases:
             self.assertEqual(node.props_to_html(), expected, node)
 
+    def test_eq(self):
+        cases = [
+            (HTMLNode(), HTMLNode(), True),
+            (HTMLNode("div"), HTMLNode(), False),
+            (HTMLNode("div"), HTMLNode("div"), True),
+            (HTMLNode("div", "hi"), HTMLNode("div", "hi"), True),
+            (HTMLNode("div", "hi"), HTMLNode("div", "bye"), False),
+            (HTMLNode("div", "hi", [HTMLNode()]), HTMLNode("div", "bye"), False),
+            (
+                HTMLNode("div", "hi", [HTMLNode()]),
+                HTMLNode("div", "bye", [HTMLNode()]),
+                False,
+            ),
+            (
+                HTMLNode("div", "hi", [HTMLNode()], {"yeah": "no"}),
+                HTMLNode("div", "hi", [HTMLNode()], {"yeah": "no"}),
+                True,
+            ),
+            (
+                HTMLNode("div", "hi", [HTMLNode()], {"yeah": "no"}),
+                HTMLNode("div", "bye", [HTMLNode()], {"no": "yeah"}),
+                False,
+            ),
+            (
+                HTMLNode("div", "hi", [HTMLNode()], {"yeah": "no"}),
+                HTMLNode("div", "hi", [HTMLNode("cry")], {"yeah": "yeah"}),
+                False,
+            ),
+            (
+                HTMLNode("div", "hi", [HTMLNode("wow")], {"yeah": "no"}),
+                HTMLNode("div", "hi", [HTMLNode("wow")], {"yeah": "yeah"}),
+                False,
+            ),
+        ]
+
+        for a, b, expected in cases:
+            self.assertEqual(
+                a == b,
+                expected,
+                f"{a} == {b}",
+            )
+
 
 class LeafNodeTest(unittest.TestCase):
     def test_to_html(self):

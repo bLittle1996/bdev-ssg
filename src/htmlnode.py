@@ -1,4 +1,4 @@
-from typing import Self
+from typing import Sequence
 
 
 type Optional[T] = T | None
@@ -9,7 +9,7 @@ class HTMLNode:
         self,
         tag: Optional[str] = None,
         value: Optional[str] = None,
-        children: list[Self] = [],
+        children: Sequence["HTMLNode"] = [],
         props: dict[str, str] = {},
     ):
         self.tag = tag
@@ -17,6 +17,7 @@ class HTMLNode:
         self.children = children
         self.props = props
 
+    # overriden by implementing classes
     def to_html(self) -> str:
         raise NotImplementedError()
 
@@ -26,7 +27,7 @@ class HTMLNode:
     def __prop_to_html(self, key: str, value: str) -> str:
         return f'{key}="{self._escape_special_chars(value)}"'
 
-    # for text content or attribute content of a html node
+    # for text content or attribute content of a html node, not intended for external use
     def _escape_special_chars(self, text: str) -> str:
         return text.replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
 
@@ -65,3 +66,17 @@ class LeafNode(HTMLNode):
             return f"<{self.tag}>{cleaned_value}</{self.tag}>"
 
         return f"<{self.tag} {self.props_to_html()}>{cleaned_value}</{self.tag}>"
+
+
+class ParentNode(HTMLNode):
+    def __init__(
+        self, tag: str, children: Sequence[HTMLNode] = [], props: dict[str, str] = {}
+    ):
+        super().__init__(tag, None, children, props)
+        self.tag = tag
+
+    def to_html(self):
+        child_html = "".join(map(lambda n: n.to_html(), self.children))
+        if len(self.props) == 0:
+            return f"<{self.tag}>{child_html}</{self.tag}>"
+        return f"<{self.tag} {self.props_to_html()}>{child_html}</{self.tag}>"

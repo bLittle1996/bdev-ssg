@@ -1,6 +1,6 @@
 import unittest
 
-from htmlnode import HTMLNode, LeafNode
+from htmlnode import HTMLNode, LeafNode, ParentNode
 
 
 class HTMLNodeTest(unittest.TestCase):
@@ -25,11 +25,53 @@ class LeafNodeTest(unittest.TestCase):
             (LeafNode(None, ""), ""),
             (LeafNode(None, "Hello, world!"), "Hello, world!"),
             (LeafNode("p", ""), "<p></p>"),
-            (LeafNode("p", "<div>lmao</div>"), "<p>&lt;div&gt;lmao&lt;/div&gt;</p>"),
+            (
+                LeafNode("p", "<script>alert('lmao')</script>"),
+                "<p>&lt;script&gt;alert('lmao')&lt;/script&gt;</p>",
+            ),
             (LeafNode("p", "just some normal text"), "<p>just some normal text</p>"),
             (
                 LeafNode("p", "just some text", {"data-kind": "normal"}),
                 '<p data-kind="normal">just some text</p>',
+            ),
+        ]
+
+        for node, expected in cases:
+            self.assertEqual(node.to_html(), expected, node)
+
+
+class ParentNodeTest(unittest.TestCase):
+    def test_to_html(self):
+        self.maxDiff = None
+        cases = [
+            (ParentNode("div"), "<div></div>"),
+            (ParentNode("p", [LeafNode(None, "some text")]), "<p>some text</p>"),
+            (ParentNode("div", props={"id": "main"}), '<div id="main"></div>'),
+            (
+                ParentNode(
+                    "div",
+                    [
+                        LeafNode("h1", "WHY CATS ARE GREAT"),
+                        LeafNode("p", "Here are a list of reasons why:"),
+                        ParentNode(
+                            "ul",
+                            [
+                                LeafNode("li", "they are cute"),
+                                LeafNode("li", "they are soft"),
+                                LeafNode("li", "they are wonderful"),
+                                ParentNode(
+                                    "li",
+                                    [
+                                        LeafNode("strong", "because i said so"),
+                                    ],
+                                ),
+                            ],
+                            {"id": "irrefutable-proof"},
+                        ),
+                    ],
+                    props={"id": "main", "class": "kitty-cats-are-so-cuuuute"},
+                ),
+                '<div id="main" class="kitty-cats-are-so-cuuuute"><h1>WHY CATS ARE GREAT</h1><p>Here are a list of reasons why:</p><ul id="irrefutable-proof"><li>they are cute</li><li>they are soft</li><li>they are wonderful</li><li><strong>because i said so</strong></li></ul></div>',
             ),
         ]
 

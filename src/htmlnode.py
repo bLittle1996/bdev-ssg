@@ -31,6 +31,12 @@ class HTMLNode:
     def _escape_special_chars(self, text: str) -> str:
         return text.replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
 
+    def __eq__(self, value: object, /) -> bool:
+        if not isinstance(value, type(self)):
+            return False
+
+        return self.to_html() == value.to_html()
+
     def __repr__(self) -> str:
         props = ""
         if self.tag:
@@ -49,6 +55,8 @@ class HTMLNode:
 
 
 class LeafNode(HTMLNode):
+    self_closing_tags = ("img",)
+
     def __init__(
         self,
         tag: Optional[str],
@@ -62,10 +70,14 @@ class LeafNode(HTMLNode):
         cleaned_value = self._escape_special_chars(self.value)
         if not self.tag:
             return cleaned_value
+        html = f"<{self.tag} {self.props_to_html()}>{cleaned_value}</{self.tag}>"
         if len(self.props) == 0:
-            return f"<{self.tag}>{cleaned_value}</{self.tag}>"
+            html = html.replace(" >", ">", 1)
+        if self.tag in self.self_closing_tags:
+            # self closing tags should not have children, so remove the value and closing tag
+            html = html.replace(f"</{self.tag}>", "").replace(cleaned_value, "")
 
-        return f"<{self.tag} {self.props_to_html()}>{cleaned_value}</{self.tag}>"
+        return html
 
 
 class ParentNode(HTMLNode):

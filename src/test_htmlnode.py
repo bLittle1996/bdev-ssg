@@ -34,6 +34,13 @@ class LeafNodeTest(unittest.TestCase):
                 LeafNode("p", "just some text", {"data-kind": "normal"}),
                 '<p data-kind="normal">just some text</p>',
             ),
+            # self-closing tags
+            (
+                LeafNode(
+                    "img", "I'll best you<img></img>", {"href": "1", "alt": "one"}
+                ),
+                '<img href="1" alt="one">',
+            ),
         ]
 
         for node, expected in cases:

@@ -5,10 +5,72 @@ from mdparser import (
     extract_markdown_images,
     extract_markdown_links,
     split_nodes_delimiter,
+    split_nodes_images,
+    split_nodes_links,
+    text_to_nodes,
 )
 
 
 class MDParserTest(unittest.TestCase):
+    def test_text_to_nodes(self):
+        cases: list[tuple[str, list[TextNode]]] = [
+            ("I am nothing special.", [TextNode("I am nothing special.")]),
+            (
+                "**I am nothing special.**",
+                [TextNode("I am nothing special.", TextType.BOLD)],
+            ),
+            (
+                "*I am nothing special.*",
+                [TextNode("I am nothing special.", TextType.ITALIC)],
+            ),
+            (
+                "_I am nothing special._",
+                [TextNode("I am nothing special.", TextType.ITALIC)],
+            ),
+            (
+                "`I am nothing special.`",
+                [TextNode("I am nothing special.", TextType.CODE)],
+            ),
+            (
+                "**I am getting** a *little* `bit more involved` _now_!",
+                [
+                    TextNode("I am getting", TextType.BOLD),
+                    TextNode(" a "),
+                    TextNode("little", TextType.ITALIC),
+                    TextNode(" "),
+                    TextNode("bit more involved", TextType.CODE),
+                    TextNode(" "),
+                    TextNode("now", TextType.ITALIC),
+                    TextNode("!"),
+                ],
+            ),
+            (
+                "Hey! [Check this out](rickroll). `:)`",
+                [
+                    TextNode("Hey! "),
+                    TextNode("Check this out", TextType.LINK, "rickroll"),
+                    TextNode(". "),
+                    TextNode(":)", TextType.CODE),
+                ],
+            ),
+            (
+                "Hey! [Check this out](rickroll). `:)` ![Also a cute cat](cute cat for sure)!!! <3",
+                [
+                    TextNode("Hey! "),
+                    TextNode("Check this out", TextType.LINK, "rickroll"),
+                    TextNode(". "),
+                    TextNode(":)", TextType.CODE),
+                    TextNode(" "),
+                    TextNode("Also a cute cat", TextType.IMAGE, "cute cat for sure"),
+                    TextNode("!!! <3"),
+                ],
+            ),
+            ("![just image](see?)", [TextNode("just image", TextType.IMAGE, "see?")]),
+        ]
+
+        for input, expected in cases:
+            self.assertListEqual(text_to_nodes(input), expected)
+
     def test_split_nodes_delimiter_no_delimiter(self):
         text_node = TextNode("I am so bold")
         output = split_nodes_delimiter([text_node], "lol", TextType.CODE)
@@ -113,6 +175,102 @@ class MDParserTest(unittest.TestCase):
             output,
         )
 
+    def split_nodes_links_happy_path(self):
+        cases: list[tuple[list[TextNode], list[TextNode]]] = [
+            (
+                [TextNode("I should ![not](split it up)")],
+                [TextNode("I should ![not](split it up)")],
+            ),
+            (
+                [TextNode("I should [definitely](split it up)")],
+                [
+                    TextNode("I should "),
+                    TextNode("definitely", TextType.LINK, "split it up"),
+                ],
+            ),
+            (
+                [
+                    TextNode(
+                        "I should [really](split it up) and have extra text to boot!"
+                    )
+                ],
+                [
+                    TextNode("I should "),
+                    TextNode("really", TextType.LINK, "split it up"),
+                    TextNode(" and have extra text to boot!"),
+                ],
+            ),
+            (
+                [TextNode("[I](start) have [one](one) or [two](two) links myself")],
+                [
+                    TextNode("I", TextType.LINK, "start"),
+                    TextNode(" have "),
+                    TextNode("one", TextType.LINK, "one"),
+                    TextNode(" or "),
+                    TextNode("two", TextType.LINK, "two"),
+                    TextNode(" myself"),
+                ],
+            ),
+            (
+                [TextNode("![Mix](image) and [match!](link)")],
+                [
+                    TextNode("![Mix](image) and "),
+                    TextNode("match!", TextType.LINK, "link"),
+                ],
+            ),
+        ]
+
+        for input, expected in cases:
+            self.assertListEqual(split_nodes_links(input), expected)
+
+    def split_nodes_images_happy_path(self):
+        cases: list[tuple[list[TextNode], list[TextNode]]] = [
+            (
+                [TextNode("I should [not](split it up)")],
+                [TextNode("I should [not](split it up)")],
+            ),
+            (
+                [TextNode("I should ![definitely](split it up)")],
+                [
+                    TextNode("I should "),
+                    TextNode("definitely", TextType.IMAGE, "split it up"),
+                ],
+            ),
+            (
+                [
+                    TextNode(
+                        "I should ![really](split it up) and have extra text to boot!"
+                    )
+                ],
+                [
+                    TextNode("I should "),
+                    TextNode("really", TextType.IMAGE, "split it up"),
+                    TextNode(" and have extra text to boot!"),
+                ],
+            ),
+            (
+                [TextNode("![I](start) have ![one](one) or ![two](two) links myself")],
+                [
+                    TextNode("I", TextType.IMAGE, "start"),
+                    TextNode(" have "),
+                    TextNode("one", TextType.IMAGE, "one"),
+                    TextNode(" or "),
+                    TextNode("two", TextType.IMAGE, "two"),
+                    TextNode(" myself"),
+                ],
+            ),
+            (
+                [TextNode("![Mix](image) and [match!](link)")],
+                [
+                    TextNode("Mix", TextType.IMAGE, "image"),
+                    TextNode(" and [match!](link)"),
+                ],
+            ),
+        ]
+
+        for input, expected in cases:
+            self.assertListEqual(split_nodes_images(input), expected)
+
     def test_extract_markdown_links_happy_path(self):
         happy_sunshine_cases: list[tuple[str, list[tuple[str, str]]]] = [
             ("I don't even have a link", []),
@@ -149,6 +307,7 @@ class MDParserTest(unittest.TestCase):
             ("I don't even have an image", []),
             ("I almost ![have](an image", []),
             ("I almost ![have(an image)", []),
+            ("I almost ! [have](an image)", []),
             ("I almost ![have] (an image)", []),
             ("I almost !(have)[an image]", []),
             ("I have ![have](an image) and a [link](link)", [("have", "an image")]),
@@ -170,6 +329,7 @@ class MDParserTest(unittest.TestCase):
                 "The ![darkness](link![haha](gotem)) is my only mistress",
                 [("darkness", "link![haha](gotem")],
             ),
+            ("! [My bleeding heart bleeds blood for you](link_actually)", []),
         ]
 
         for input, output in edgy_cases:

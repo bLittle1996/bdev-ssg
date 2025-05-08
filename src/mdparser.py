@@ -1,4 +1,31 @@
+from functools import reduce
+from typing import Callable
 from textnode import TextNode, TextType
+
+
+def text_to_nodes(text: str) -> list[TextNode]:
+    return pipe(
+        [TextNode(text)],
+        split_nodes_images,
+        split_nodes_links,
+        split_delim("**", TextType.BOLD),
+        split_delim("*", TextType.ITALIC),
+        split_delim("_", TextType.ITALIC),
+        split_delim("`", TextType.CODE),
+    )
+
+
+def pipe(data, *fns: Callable[[list[TextNode]], list[TextNode]]):
+    result = data
+    for f in fns:
+        result = f(result)
+    return result
+
+
+def split_delim(
+    delimiter: str, node_type: TextType
+) -> Callable[[list[TextNode]], list[TextNode]]:
+    return lambda nodes: split_nodes_delimiter(nodes, delimiter, node_type)
 
 
 # takes nodes, inspects their text, and if there is text surrounded by the delimiter turns it into a new set of nodes.
@@ -47,6 +74,50 @@ def split_nodes_delimiter(
                 i = start_from
             else:
                 i += 1
+    return new_nodes
+
+
+def split_nodes_links(nodes: list[TextNode]) -> list[TextNode]:
+    new_nodes: list[TextNode] = []
+
+    for n in nodes:
+        if n.type is not TextType.TEXT:
+            new_nodes.append(n)
+            continue
+
+        links = extract_markdown_links(n.text)
+        remaining_text = n.text
+        for label, link in links:
+            markdown = f"[{label}]({link})"
+            before, md, after = remaining_text.partition(markdown)
+            new_nodes.append(TextNode(before))
+            new_nodes.append(TextNode(label, TextType.LINK, link))
+            remaining_text = after
+        if remaining_text != "":
+            new_nodes.append(TextNode(remaining_text))
+
+    return new_nodes
+
+
+def split_nodes_images(nodes: list[TextNode]) -> list[TextNode]:
+    new_nodes: list[TextNode] = []
+
+    for n in nodes:
+        if n.type is not TextType.TEXT:
+            new_nodes.append(n)
+            continue
+
+        images = extract_markdown_images(n.text)
+        remaining_text = n.text
+        for label, link in images:
+            markdown = f"![{label}]({link})"
+            before, md, after = remaining_text.partition(markdown)
+            new_nodes.append(TextNode(before))
+            new_nodes.append(TextNode(label, TextType.IMAGE, link))
+            remaining_text = after
+        if remaining_text != "":
+            new_nodes.append(TextNode(remaining_text))
+
     return new_nodes
 
 

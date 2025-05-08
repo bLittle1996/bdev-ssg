@@ -1,14 +1,5 @@
-from enum import Enum
+from enums import TextType
 from htmlnode import LeafNode
-
-
-class TextType(Enum):
-    TEXT = "TEXT"
-    BOLD = "BOLD"
-    ITALIC = "ITALIC"
-    CODE = "CODE"
-    LINK = "LINK"
-    IMAGE = "IMG"
 
 
 class TextNode:

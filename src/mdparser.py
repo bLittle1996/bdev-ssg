@@ -1,6 +1,6 @@
-from functools import reduce
 from typing import Callable
-from textnode import TextNode, TextType
+from textnode import TextNode
+from enums import TextType
 
 
 def text_to_nodes(text: str) -> list[TextNode]:
@@ -13,13 +13,6 @@ def text_to_nodes(text: str) -> list[TextNode]:
         split_delim("_", TextType.ITALIC),
         split_delim("`", TextType.CODE),
     )
-
-
-def pipe(data, *fns: Callable[[list[TextNode]], list[TextNode]]):
-    result = data
-    for f in fns:
-        result = f(result)
-    return result
 
 
 def split_delim(
@@ -215,3 +208,10 @@ def index_of_link(text: str, start_from: int = 0) -> tuple[int, int, int, int] |
             link_end_index = i
             return (text_start_index, text_end_index, link_start_index, link_end_index)
     return None
+
+
+def pipe(data, *fns: Callable[[list[TextNode]], list[TextNode]]):
+    result = data
+    for f in fns:
+        result = f(result)
+    return result

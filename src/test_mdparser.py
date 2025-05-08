@@ -7,6 +7,7 @@ from mdparser import (
     split_nodes_delimiter,
     split_nodes_images,
     split_nodes_links,
+    text_to_blocks,
     text_to_nodes,
 )
 
@@ -70,6 +71,23 @@ class MDParserTest(unittest.TestCase):
 
         for input, expected in cases:
             self.assertListEqual(text_to_nodes(input), expected)
+
+    def test_text_to_blocks(self):
+        # i'm getting lazy so I'm just gonna use the example of boot.dev
+        input = """# This is a heading
+
+This is a paragraph of text. It has some **bold** and _italic_ words inside of it.
+
+- This is the first list item in a list block
+- This is a list item
+- This is another list item
+"""
+        expected = [
+            "# This is a heading",
+            "This is a paragraph of text. It has some **bold** and _italic_ words inside of it.",
+            "- This is the first list item in a list block\n- This is a list item\n- This is another list item",
+        ]
+        self.assertListEqual(text_to_blocks(input), expected)
 
     def test_split_nodes_delimiter_no_delimiter(self):
         text_node = TextNode("I am so bold")

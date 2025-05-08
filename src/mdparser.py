@@ -28,6 +28,11 @@ def split_delim(
     return lambda nodes: split_nodes_delimiter(nodes, delimiter, node_type)
 
 
+# turns the whole md document into a list of strings. Deletes extra whitespace, sorry
+def text_to_blocks(md: str) -> list[str]:
+    return list(map(lambda s: s.strip(), md.split("\n\n")))
+
+
 # takes nodes, inspects their text, and if there is text surrounded by the delimiter turns it into a new set of nodes.
 # chain 'em together to handle all the things
 # i.e

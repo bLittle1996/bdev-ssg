@@ -50,6 +50,9 @@ def split_nodes_delimiter(
     return new_nodes
 
 
+# note: not using regex because I do not have a [regex license](https://regexlicensing.org/) ;)
+
+
 # returns a list of markdown images (i.e ![alt](link) )
 def extract_markdown_images(text: str) -> list[tuple[str, str]]:
     extracted: list[tuple[str, str]] = []

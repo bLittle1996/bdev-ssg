@@ -1,7 +1,11 @@
 import unittest
 
 from textnode import TextNode, TextType
-from mdparser import split_nodes_delimiter
+from mdparser import (
+    extract_markdown_images,
+    extract_markdown_links,
+    split_nodes_delimiter,
+)
 
 
 class MDParserTest(unittest.TestCase):
@@ -108,3 +112,65 @@ class MDParserTest(unittest.TestCase):
             ),
             output,
         )
+
+    def test_extract_markdown_links_happy_path(self):
+        happy_sunshine_cases: list[tuple[str, list[tuple[str, str]]]] = [
+            ("I don't even have a link", []),
+            ("I almost [have](a link", []),
+            ("I almost [have] (a link)", []),
+            ("I almost [have(a link)", []),
+            ("I almost (have)[a link]", []),
+            ("I have ![have](an image) and a [link](link)", [("link", "link")]),
+            ("I do [have](a link)", [("have", "a link")]),
+            (
+                "I do [have](a link) and [another one](winky face)",
+                [("have", "a link"), ("another one", "winky face")],
+            ),
+            ("I do ![have an](image ackchually)", []),
+        ]
+
+        for input, output in happy_sunshine_cases:
+            self.assertListEqual(extract_markdown_links(input), output)
+
+    def test_extract_markdown_links_edge_cases(self):
+        edgy_cases: list[tuple[str, list[tuple[str, str]]]] = [
+            ("My soul lays [forgotten]() in the shadows", []),
+            (
+                "I am the [darkness]([within](metal guitar riff))",
+                [("darkness", "[within](metal guitar riff")],
+            ),
+        ]
+
+        for input, output in edgy_cases:
+            self.assertListEqual(extract_markdown_links(input), output)
+
+    def test_extract_markdown_images_happy_path(self):
+        happy_sunshine_cases: list[tuple[str, list[tuple[str, str]]]] = [
+            ("I don't even have an image", []),
+            ("I almost ![have](an image", []),
+            ("I almost ![have(an image)", []),
+            ("I almost ![have] (an image)", []),
+            ("I almost !(have)[an image]", []),
+            ("I have ![have](an image) and a [link](link)", [("have", "an image")]),
+            ("I do ![have](an image)", [("have", "an image")]),
+            (
+                "I do ![have](an image) and ![another one](winky face)",
+                [("have", "an image"), ("another one", "winky face")],
+            ),
+            ("I do [have a](link ackchually)", []),
+        ]
+
+        for input, output in happy_sunshine_cases:
+            self.assertListEqual(extract_markdown_images(input), output)
+
+    def test_extract_markdown_images_edge_cases(self):
+        edgy_cases: list[tuple[str, list[tuple[str, str]]]] = [
+            ("Cloaked in shadows, I remain concealed from mortal eyes", []),
+            (
+                "The ![darkness](link![haha](gotem)) is my only mistress",
+                [("darkness", "link![haha](gotem")],
+            ),
+        ]
+
+        for input, output in edgy_cases:
+            self.assertListEqual(extract_markdown_images(input), output)

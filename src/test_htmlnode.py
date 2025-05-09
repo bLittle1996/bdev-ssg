@@ -4,6 +4,44 @@ from htmlnode import HTMLNode, LeafNode, ParentNode
 
 
 class HTMLNodeTest(unittest.TestCase):
+    def test_find_all(self):
+        tree = ParentNode(
+            "div",
+            [
+                LeafNode("h1", "WHY CATS ARE GREAT"),
+                LeafNode("p", "Here are a list of reasons why:"),
+                ParentNode(
+                    "ul",
+                    [
+                        LeafNode("li", "they are cute"),
+                        LeafNode("li", "they are soft"),
+                        LeafNode("li", "they are wonderful"),
+                        ParentNode(
+                            "li",
+                            [
+                                LeafNode("strong", "because i said so"),
+                            ],
+                        ),
+                    ],
+                    {"id": "irrefutable-proof"},
+                ),
+            ],
+            props={"id": "main", "class": "kitty-cats-are-so-cuuuute"},
+        )
+
+        self.assertListEqual(
+            tree.find_all("h1"), [LeafNode("h1", "WHY CATS ARE GREAT")]
+        )
+        self.assertListEqual(
+            tree.find_all("li"),
+            [
+                LeafNode("li", "they are cute"),
+                LeafNode("li", "they are soft"),
+                LeafNode("li", "they are wonderful"),
+                ParentNode("li", [LeafNode("strong", "because i said so")]),
+            ],
+        )
+
     def test_find(self):
         tree = ParentNode(
             "div",

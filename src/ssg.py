@@ -7,7 +7,7 @@ SSG_TITLE = "<!--SSG_TITLE-->"
 SSG_TARGET = "<!--SSG_TARGET-->"
 
 
-def generate_pages(template_path: str, src_dir: str, dest_root: str):
+def generate_pages(template_path: str, src_dir: str, dest_root: str, **kwargs):
     ls = os.listdir(src_dir)
 
     for f in ls:
@@ -16,16 +16,21 @@ def generate_pages(template_path: str, src_dir: str, dest_root: str):
                 template_path,
                 os.path.join(src_dir, f),
                 os.path.join(dest_root, f"{f.rstrip(".md")}.html"),
+                **kwargs,
             )
         else:
             generate_pages(
-                template_path, os.path.join(src_dir, f), os.path.join(dest_root, f)
+                template_path,
+                os.path.join(src_dir, f),
+                os.path.join(dest_root, f),
+                **kwargs,
             )
 
 
-def generate_page(template_path: str, md_path: str, dest_path: str):
+def generate_page(template_path: str, md_path: str, dest_path: str, **kwargs):
     template = ""
     md = ""
+    base_path = kwargs.get("base_path", "/")
 
     with open(template_path) as tmpl, open(md_path) as mdf:
         template = tmpl.read()
@@ -38,19 +43,22 @@ def generate_page(template_path: str, md_path: str, dest_path: str):
         html_tree = markdown_to_html_node(md)
         title = extract_title(html_tree)
         template = template.replace(SSG_TITLE, title).replace(
-            SSG_TARGET, html_tree.to_html()
+            SSG_TARGET,
+            html_tree.to_html()
+            .replace('href="/', 'href="' + base_path)
+            .replace('src="/', 'src="' + base_path),
         )
         html_file.write(template)
 
 
 def copy_dir(src: str, dest: str):
     if not os.path.exists(src) or os.path.isfile(src):
-        raise ValueError("src must be a directory")
+        raise ValueError(f"src must be a directory: {src}")
     if os.path.isfile(dest):
-        raise ValueError("dest must be a directory")
+        raise ValueError(f"dest must be a directory: {dest}")
 
     if not os.path.exists(dest):
-        os.mkdir(dest)
+        os.makedirs(dest, 0o755, True)
 
     _clear_dir(dest)
     contents = os.scandir(src)

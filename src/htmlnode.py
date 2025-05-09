@@ -43,6 +43,14 @@ class HTMLNode:
                 return found
         return None
 
+    def find_all(self, tag: str) -> list["HTMLNode"]:
+        matches = []
+        if self.tag == tag:
+            matches.append(self)
+        for c in self.children:
+            matches = matches + c.find_all(tag)
+        return matches
+
     def __eq__(self, rhs: object, /) -> bool:
         if not isinstance(rhs, type(self)):
             return False

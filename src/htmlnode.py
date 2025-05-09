@@ -52,8 +52,7 @@ class HTMLNode:
         props = ""
         if self.tag:
             props = self.tag
-        if self.value:
-            props += f', "{self.value}"'
+        props += f', {f"\"{self.value}\"" if self.value else None}'
         if self.children:
             props += f", {len(self.children)} child nodes"
         if self.props:
@@ -62,7 +61,7 @@ class HTMLNode:
         if props.startswith(", "):
             props = props.replace(", ", "")
 
-        return f"HTMLNode({props})"
+        return f"{type(self).__name__}({props})"
 
 
 class LeafNode(HTMLNode):

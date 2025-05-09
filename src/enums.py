@@ -2,6 +2,8 @@ from enum import Enum
 from functools import reduce
 from typing import Callable, Sequence
 
+from funcs import every
+
 
 class TextType(Enum):
     TEXT = "TEXT"
@@ -37,14 +39,10 @@ class BlockType(Enum):
             return BlockType.ORDERED_LIST
         if every(lambda l: l.startswith("> ") or l == ">", lines):
             return BlockType.QUOTE
-        if len(lines) == 1 and lines[0].startswith("#"):
+        if len(lines) == 1 and lines[0].startswith("#") and " " in lines[0]:
             return BlockType.HEADING
 
         return BlockType.PARAGRAPH
-
-
-def every[T](predicate: Callable[[T], bool], data: Sequence[T]) -> bool:
-    return reduce(lambda acc, cur: acc and predicate(cur), data, True)
 
 
 def is_ol(lines: list[str]) -> bool:

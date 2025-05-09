@@ -1,9 +1,24 @@
 from unittest import TestCase
 
-from mdparser import markdown_to_html
+from mdparser import extract_title, markdown_to_html, markdown_to_html_node
 
 
 class TestMarkdownParser(TestCase):
+    def test_extract_title(self):
+        md = """
+# hi
+"""
+        html = markdown_to_html_node(md)
+        self.assertEqual(extract_title(html), "hi")
+
+    def test_extract_title_raises(self):
+        md = """
+## hi
+"""
+        html = markdown_to_html_node(md)
+        with self.assertRaises(Exception):
+            extract_title(html)
+
     def test_paragraphs(self):
         md = """
 This is **bolded** paragraph

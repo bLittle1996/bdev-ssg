@@ -25,11 +25,23 @@ class HTMLNode:
         return " ".join(map(lambda v: self.__prop_to_html(*v), self.props.items()))
 
     def __prop_to_html(self, key: str, value: str) -> str:
+        if self.tag == "img" and key == "href":
+            key = "src"
         return f'{key}="{self._escape_special_chars(value)}"'
 
     # for text content or attribute content of a html node, not intended for external use
     def _escape_special_chars(self, text: str) -> str:
         return text.replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
+
+    # DFS for tag
+    def find(self, tag: str) -> "HTMLNode | None":
+        if self.tag == tag:
+            return self
+        for c in self.children:
+            found = c.find(tag)
+            if found:
+                return found
+        return None
 
     def __eq__(self, rhs: object, /) -> bool:
         if not isinstance(rhs, type(self)):

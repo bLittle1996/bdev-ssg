@@ -1,17 +1,9 @@
-from mdparser import markdown_to_html
+from ssg import copy_dir, generate_pages
 
 
 def main():
-    print(
-        markdown_to_html(
-            """
-```
-This is text that _should_ remain
-the **same** even with inline stuff
-```
-"""
-        )
-    )
+    copy_dir("./static", "./public")
+    generate_pages("./template.html", "./content", "./public")
 
 
 if __name__ == "__main__":

@@ -42,12 +42,13 @@ def generate_page(template_path: str, md_path: str, dest_path: str, **kwargs):
         print(f"Generating page {dest_path} from {md_path} using {template_path}")
         html_tree = markdown_to_html_node(md)
         title = extract_title(html_tree)
-        template = template.replace(SSG_TITLE, title).replace(
-            SSG_TARGET,
-            html_tree.to_html()
+        template = (
+            template.replace(SSG_TITLE, title)
+            .replace(SSG_TARGET, html_tree.to_html())
             .replace('href="/', 'href="' + base_path)
-            .replace('src="/', 'src="' + base_path),
+            .replace('src="/', 'src="' + base_path)
         )
+
         html_file.write(template)
 
 

@@ -139,7 +139,8 @@ def split_nodes_links(nodes: list[TextNode]) -> list[TextNode]:
         for label, link in links:
             markdown = f"[{label}]({link})"
             before, md, after = remaining_text.partition(markdown)
-            new_nodes.append(TextNode(before))
+            if before:
+                new_nodes.append(TextNode(before))
             new_nodes.append(TextNode(label, TextType.LINK, link))
             remaining_text = after
         if remaining_text != "":
@@ -161,7 +162,8 @@ def split_nodes_images(nodes: list[TextNode]) -> list[TextNode]:
         for label, link in images:
             markdown = f"![{label}]({link})"
             before, md, after = remaining_text.partition(markdown)
-            new_nodes.append(TextNode(before))
+            if before:
+                new_nodes.append(TextNode(before))
             new_nodes.append(TextNode(label, TextType.IMAGE, link))
             remaining_text = after
         if remaining_text != "":
@@ -186,7 +188,7 @@ def extract_markdown_images(text: str) -> list[tuple[str, str]]:
             break
         label_start, label_end, link_start, link_end = last_match
         # if the character before the beginning of the text label is not a !, it's a link!!!!
-        if label_start > 0 and text[label_start - 1] != "!":
+        if label_start == 0 or text[label_start - 1] != "!":
             continue
         label = text[label_start + 1 : label_end]
         link = text[link_start + 1 : link_end]

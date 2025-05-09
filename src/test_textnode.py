@@ -126,6 +126,7 @@ class TestTextNode(unittest.TestCase):
                 ],
             ),
             ("![just image](see?)", [TextNode("just image", TextType.IMAGE, "see?")]),
+            ("[just link](see?)", [TextNode("just link", TextType.LINK, "see?")]),
         ]
 
         for input, expected in cases:
